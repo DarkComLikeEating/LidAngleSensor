@@ -9,7 +9,7 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        // Setup code that might create autoreleased objects goes here.
+        // 可能创建自动释放对象的设置代码放在这里。
     }
     return NSApplicationMain(argc, argv);
 }

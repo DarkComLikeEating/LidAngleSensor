@@ -34,7 +34,7 @@ typedef NS_ENUM(NSInteger, AudioMode) {
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    self.currentAudioMode = AudioModeCreak; // Default to creak mode
+    self.currentAudioMode = AudioModeCreak; // 默认为吱吱声模式
     [self createWindow];
     [self initializeLidSensor];
     [self initializeAudioEngines];
@@ -53,7 +53,7 @@ typedef NS_ENUM(NSInteger, AudioMode) {
 }
 
 - (void)createWindow {
-    // Create the main window (taller to accommodate mode selection and audio controls)
+    // 创建主窗口（更高以容纳模式选择和音频控制）
     NSRect windowFrame = NSMakeRect(100, 100, 450, 480);
     self.window = [[NSWindow alloc] initWithContentRect:windowFrame
                                               styleMask:NSWindowStyleMaskTitled | 
@@ -62,40 +62,40 @@ typedef NS_ENUM(NSInteger, AudioMode) {
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
     
-    [self.window setTitle:@"MacBook Lid Angle Sensor"];
+    [self.window setTitle:@"MacBook 屏幕角度传感器"];
     [self.window makeKeyAndOrderFront:nil];
     [self.window center];
     
-    // Create the content view
+    // 创建内容视图
     NSView *contentView = [[NSView alloc] initWithFrame:windowFrame];
     [self.window setContentView:contentView];
     
-    // Create angle display label with tabular numbers (larger, light font)
+    // 创建角度显示标签，使用表格数字（更大、轻字体）
     self.angleLabel = [[NSLabel alloc] init];
-    [self.angleLabel setStringValue:@"Initializing..."];
+    [self.angleLabel setStringValue:@"初始化中..."];
     [self.angleLabel setFont:[NSFont monospacedDigitSystemFontOfSize:48 weight:NSFontWeightLight]];
     [self.angleLabel setAlignment:NSTextAlignmentCenter];
     [self.angleLabel setTextColor:[NSColor systemBlueColor]];
     [contentView addSubview:self.angleLabel];
     
-    // Create velocity display label with tabular numbers
+    // 创建速度显示标签，使用表格数字
     self.velocityLabel = [[NSLabel alloc] init];
-    [self.velocityLabel setStringValue:@"Velocity: 00 deg/s"];
+    [self.velocityLabel setStringValue:@"速度: 00 度/秒"];
     [self.velocityLabel setFont:[NSFont monospacedDigitSystemFontOfSize:14 weight:NSFontWeightRegular]];
     [self.velocityLabel setAlignment:NSTextAlignmentCenter];
     [contentView addSubview:self.velocityLabel];
     
-    // Create status label
+    // 创建状态标签
     self.statusLabel = [[NSLabel alloc] init];
-    [self.statusLabel setStringValue:@"Detecting sensor..."];
+    [self.statusLabel setStringValue:@"正在检测传感器..."];
     [self.statusLabel setFont:[NSFont systemFontOfSize:14]];
     [self.statusLabel setAlignment:NSTextAlignmentCenter];
     [self.statusLabel setTextColor:[NSColor secondaryLabelColor]];
     [contentView addSubview:self.statusLabel];
     
-    // Create audio toggle button
+    // 创建音频切换按钮
     self.audioToggleButton = [[NSButton alloc] init];
-    [self.audioToggleButton setTitle:@"Start Audio"];
+    [self.audioToggleButton setTitle:@"开始音频"];
     [self.audioToggleButton setBezelStyle:NSBezelStyleRounded];
     [self.audioToggleButton setTarget:self];
     [self.audioToggleButton setAction:@selector(toggleAudio:)];
@@ -112,7 +112,7 @@ typedef NS_ENUM(NSInteger, AudioMode) {
     
     // Create mode label
     self.modeLabel = [[NSLabel alloc] init];
-    [self.modeLabel setStringValue:@"Audio Mode:"];
+    [self.modeLabel setStringValue:@"音频模式:"];
     [self.modeLabel setFont:[NSFont systemFontOfSize:14 weight:NSFontWeightMedium]];
     [self.modeLabel setAlignment:NSTextAlignmentCenter];
     [self.modeLabel setTextColor:[NSColor labelColor]];
@@ -121,8 +121,8 @@ typedef NS_ENUM(NSInteger, AudioMode) {
     // Create mode selector
     self.modeSelector = [[NSSegmentedControl alloc] init];
     [self.modeSelector setSegmentCount:2];
-    [self.modeSelector setLabel:@"Creak" forSegment:0];
-    [self.modeSelector setLabel:@"Theremin" forSegment:1];
+    [self.modeSelector setLabel:@"吱吱声" forSegment:0];
+    [self.modeSelector setLabel:@"特雷门琴" forSegment:1];
     [self.modeSelector setSelectedSegment:0]; // Default to creak
     [self.modeSelector setTarget:self];
     [self.modeSelector setAction:@selector(modeChanged:)];
@@ -175,12 +175,12 @@ typedef NS_ENUM(NSInteger, AudioMode) {
     self.lidSensor = [[LidAngleSensor alloc] init];
     
     if (self.lidSensor.isAvailable) {
-        [self.statusLabel setStringValue:@"Sensor detected - Reading angle..."];
+        [self.statusLabel setStringValue:@"已检测到传感器 - 正在读取角度..."];
         [self.statusLabel setTextColor:[NSColor systemGreenColor]];
     } else {
-        [self.statusLabel setStringValue:@"Lid angle sensor not available on this device"];
+        [self.statusLabel setStringValue:@"此设备不支持屏幕角度传感器"];
         [self.statusLabel setTextColor:[NSColor systemRedColor]];
-        [self.angleLabel setStringValue:@"Not Available"];
+        [self.angleLabel setStringValue:@"不可用"];
         [self.angleLabel setTextColor:[NSColor systemRedColor]];
     }
 }
@@ -192,7 +192,7 @@ typedef NS_ENUM(NSInteger, AudioMode) {
     if (self.creakAudioEngine && self.thereminAudioEngine) {
         [self.audioStatusLabel setStringValue:@""];
     } else {
-        [self.audioStatusLabel setStringValue:@"Audio initialization failed"];
+        [self.audioStatusLabel setStringValue:@"音频初始化失败"];
         [self.audioStatusLabel setTextColor:[NSColor systemRedColor]];
         [self.audioToggleButton setEnabled:NO];
     }
@@ -206,11 +206,11 @@ typedef NS_ENUM(NSInteger, AudioMode) {
     
     if ([currentEngine isEngineRunning]) {
         [currentEngine stopEngine];
-        [self.audioToggleButton setTitle:@"Start Audio"];
+        [self.audioToggleButton setTitle:@"开始音频"];
         [self.audioStatusLabel setStringValue:@""];
     } else {
         [currentEngine startEngine];
-        [self.audioToggleButton setTitle:@"Stop Audio"];
+        [self.audioToggleButton setTitle:@"停止音频"];
         [self.audioStatusLabel setStringValue:@""];
     }
 }
@@ -219,23 +219,23 @@ typedef NS_ENUM(NSInteger, AudioMode) {
     NSSegmentedControl *control = (NSSegmentedControl *)sender;
     AudioMode newMode = (AudioMode)control.selectedSegment;
     
-    // Stop current engine if running
+    // 如果当前引擎正在运行则停止它
     id currentEngine = [self currentAudioEngine];
     BOOL wasRunning = [currentEngine isEngineRunning];
     if (wasRunning) {
         [currentEngine stopEngine];
     }
     
-    // Update mode
+    // 更新模式
     self.currentAudioMode = newMode;
     
-    // Start new engine if the previous one was running
+    // 如果之前的引擎正在运行，则启动新引擎
     if (wasRunning) {
         id newEngine = [self currentAudioEngine];
         [newEngine startEngine];
-        [self.audioToggleButton setTitle:@"Stop Audio"];
+        [self.audioToggleButton setTitle:@"停止音频"];
     } else {
-        [self.audioToggleButton setTitle:@"Start Audio"];
+        [self.audioToggleButton setTitle:@"开始音频"];
     }
     
     [self.audioStatusLabel setStringValue:@""];
@@ -253,7 +253,7 @@ typedef NS_ENUM(NSInteger, AudioMode) {
 }
 
 - (void)startUpdatingDisplay {
-    // Update every 16ms (60Hz) for smooth real-time audio and display updates
+    // 每 16 毫秒更新一次（60Hz），以实现平滑的实时音频和显示更新
     self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:0.016
                                                         target:self
                                                       selector:@selector(updateAngleDisplay)
@@ -269,54 +269,54 @@ typedef NS_ENUM(NSInteger, AudioMode) {
     double angle = [self.lidSensor lidAngle];
     
     if (angle == -2.0) {
-        [self.angleLabel setStringValue:@"Read Error"];
+        [self.angleLabel setStringValue:@"读取错误"];
         [self.angleLabel setTextColor:[NSColor systemOrangeColor]];
-        [self.statusLabel setStringValue:@"Failed to read sensor data"];
+        [self.statusLabel setStringValue:@"无法读取传感器数据"];
         [self.statusLabel setTextColor:[NSColor systemOrangeColor]];
     } else {
         [self.angleLabel setStringValue:[NSString stringWithFormat:@"%.1f°", angle]];
         [self.angleLabel setTextColor:[NSColor systemBlueColor]];
         
-        // Update current audio engine with new angle
+        // 使用新角度更新当前音频引擎
         id currentEngine = [self currentAudioEngine];
         if (currentEngine) {
             [currentEngine updateWithLidAngle:angle];
             
-            // Update velocity display with leading zero and whole numbers
+            // 使用前导零和整数更新速度显示
             double velocity = [currentEngine currentVelocity];
             int roundedVelocity = (int)round(velocity);
             if (roundedVelocity < 100) {
-                [self.velocityLabel setStringValue:[NSString stringWithFormat:@"Velocity: %02d deg/s", roundedVelocity]];
+                [self.velocityLabel setStringValue:[NSString stringWithFormat:@"速度: %02d 度/秒", roundedVelocity]];
             } else {
-                [self.velocityLabel setStringValue:[NSString stringWithFormat:@"Velocity: %d deg/s", roundedVelocity]];
+                [self.velocityLabel setStringValue:[NSString stringWithFormat:@"速度: %d 度/秒", roundedVelocity]];
             }
             
-            // Show audio parameters when running
+            // 运行时显示音频参数
             if ([currentEngine isEngineRunning]) {
                 if (self.currentAudioMode == AudioModeCreak) {
                     double gain = [currentEngine currentGain];
                     double rate = [currentEngine currentRate];
-                    [self.audioStatusLabel setStringValue:[NSString stringWithFormat:@"Gain: %.2f, Rate: %.2f", gain, rate]];
+                    [self.audioStatusLabel setStringValue:[NSString stringWithFormat:@"增益: %.2f, 速率: %.2f", gain, rate]];
                 } else if (self.currentAudioMode == AudioModeTheremin) {
                     double frequency = [currentEngine currentFrequency];
                     double volume = [currentEngine currentVolume];
-                    [self.audioStatusLabel setStringValue:[NSString stringWithFormat:@"Freq: %.1f Hz, Vol: %.2f", frequency, volume]];
+                    [self.audioStatusLabel setStringValue:[NSString stringWithFormat:@"频率: %.1f Hz, 音量: %.2f", frequency, volume]];
                 }
             }
         }
         
-        // Provide contextual status based on angle
+        // 根据角度提供上下文状态
         NSString *status;
         if (angle < 5.0) {
-            status = @"Lid is closed";
+            status = @"屏幕已关闭";
         } else if (angle < 45.0) {
-            status = @"Lid slightly open";
+            status = @"屏幕微开";
         } else if (angle < 90.0) {
-            status = @"Lid partially open";
+            status = @"屏幕半开";
         } else if (angle < 120.0) {
-            status = @"Lid mostly open";
+            status = @"屏幕大部分打开";
         } else {
-            status = @"Lid fully open";
+            status = @"屏幕完全打开";
         }
         
         [self.statusLabel setStringValue:status];

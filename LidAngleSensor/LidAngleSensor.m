@@ -48,13 +48,13 @@
         return NULL;
     }
     
-    // Match specifically for the lid angle sensor to avoid permission prompts
-    // Target: Sensor page (0x0020), Orientation usage (0x008A)
+    // 专门匹配屏幕倾角传感器以避免权限提示
+    // 目标：传感器页面（0x0020），方向用途（0x008A）
     NSDictionary *matchingDict = @{
         @"VendorID": @(0x05AC),     // Apple
-        @"ProductID": @(0x8104),    // Specific product
-        @"UsagePage": @(0x0020),    // Sensor page
-        @"Usage": @(0x008A),        // Orientation usage
+        @"ProductID": @(0x8104),    // 特定产品
+        @"UsagePage": @(0x0020),    // 传感器页面
+        @"Usage": @(0x008A),        // 方向用途
     };
     
     IOHIDManagerSetDeviceMatching(manager, (__bridge CFDictionaryRef)matchingDict);
@@ -67,11 +67,11 @@
         const void **deviceArray = malloc(sizeof(void*) * CFSetGetCount(devices));
         CFSetGetValues(devices, deviceArray);
         
-        // Test each matching device to find the one that actually works
+        // 测试每个匹配的设备以找到实际工作的设备
         for (CFIndex i = 0; i < CFSetGetCount(devices); i++) {
             IOHIDDeviceRef testDevice = (IOHIDDeviceRef)deviceArray[i];
             
-            // Try to open and read from this device
+            // 尝试打开并从该设备读取
             if (IOHIDDeviceOpen(testDevice, kIOHIDOptionsTypeNone) == kIOReturnSuccess) {
                 uint8_t testReport[8] = {0};
                 CFIndex reportLength = sizeof(testReport);
@@ -83,10 +83,10 @@
                                                       &reportLength);
                 
                 if (result == kIOReturnSuccess && reportLength >= 3) {
-                    // This device works! Use it.
+                    // 这个设备可以工作！使用它。
                     device = (IOHIDDeviceRef)CFRetain(testDevice);
                     NSLog(@"[LidAngleSensor] Successfully found working lid angle sensor device (index %ld)", i);
-                    IOHIDDeviceClose(testDevice, kIOHIDOptionsTypeNone); // Close for now, will reopen in init
+                    IOHIDDeviceClose(testDevice, kIOHIDOptionsTypeNone); // 暂时关闭，将在 init 中重新打开
                     break;
                 } else {
                     NSLog(@"[LidAngleSensor] Device %ld failed to read (result: %d, length: %ld)", i, result, reportLength);
@@ -110,25 +110,25 @@
 
 - (double)lidAngle {
     if (!_hidDevice) {
-        return -2.0;  // Device not available
+        return -2.0;  // 设备不可用
     }
     
-    // Read lid angle using discovered parameters:
-    // Feature Report Type 2, Report ID 1, returns 3 bytes with 16-bit angle in centidegrees
+    // 使用发现的参数读取屏幕倾角：
+    // 功能报告类型 2，报告 ID 1，返回 3 字节，包含以百分之一度为单位的 16 位角度
     uint8_t report[8] = {0};
     CFIndex reportLength = sizeof(report);
     
     IOReturn result = IOHIDDeviceGetReport(_hidDevice, 
-                                          kIOHIDReportTypeFeature,  // Type 2
-                                          1,                        // Report ID 1
+                                          kIOHIDReportTypeFeature,  // 类型 2
+                                          1,                        // 报告 ID 1
                                           report, 
                                           &reportLength);
     
     if (result == kIOReturnSuccess && reportLength >= 3) {
-        // Data format: [report_id, angle_low, angle_high]
-        // Parse the 16-bit value from bytes 1-2 (skipping report ID)
-        uint16_t rawValue = (report[2] << 8) | report[1];  // High byte, low byte
-        double angle = (double)rawValue;  // Raw value is already in degrees
+        // 数据格式：[report_id, angle_low, angle_high]
+        // 从字节 1-2 解析 16 位值（跳过报告 ID）
+        uint16_t rawValue = (report[2] << 8) | report[1];  // 高字节，低字节
+        double angle = (double)rawValue;  // 原始值已经是度数
         
         return angle;
     }

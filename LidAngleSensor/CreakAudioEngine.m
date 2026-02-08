@@ -7,37 +7,37 @@
 
 #import "CreakAudioEngine.h"
 
-// Audio parameter mapping constants
-static const double kDeadzone = 1.0;          // deg/s - below this: treat as still
-static const double kVelocityFull = 10.0;     // deg/s - max creak volume at/under this velocity
-static const double kVelocityQuiet = 100.0;   // deg/s - silent by/over this velocity (fast movement)
+// 音频参数映射常量
+static const double kDeadzone = 1.0;          // 度/秒 - 低于此值：视为静止
+static const double kVelocityFull = 10.0;     // 度/秒 - 在此速度或以下时最大吱吱声音量
+static const double kVelocityQuiet = 100.0;   // 度/秒 - 在此速度或以上时静音（快速移动）
 
-// Pitch variation constants  
-static const double kMinRate = 0.80;          // Minimum varispeed rate (lower pitch for slow movement)
-static const double kMaxRate = 1.10;          // Maximum varispeed rate (higher pitch for fast movement)
+// 音高变化常量  
+static const double kMinRate = 0.80;          // 最小变速率（慢速移动时音调较低）
+static const double kMaxRate = 1.10;          // 最大变速率（快速移动时音调较高）
 
-// Smoothing and timing constants
-static const double kAngleSmoothingFactor = 0.05;     // Heavy smoothing for sensor noise (5% new, 95% old)
-static const double kVelocitySmoothingFactor = 0.3;   // Moderate smoothing for velocity
-static const double kMovementThreshold = 0.5;         // Minimum angle change to register as movement (degrees)
-static const double kGainRampTimeMs = 50.0;           // Gain ramping time constant (milliseconds)
-static const double kRateRampTimeMs = 80.0;           // Rate ramping time constant (milliseconds)
-static const double kMovementTimeoutMs = 50.0;        // Time before aggressive velocity decay (milliseconds)
-static const double kVelocityDecayFactor = 0.5;       // Decay rate when no movement detected
-static const double kAdditionalDecayFactor = 0.8;     // Additional decay after timeout
+// 平滑和时间常量
+static const double kAngleSmoothingFactor = 0.05;     // 传感器噪声的重度平滑（5% 新值，95% 旧值）
+static const double kVelocitySmoothingFactor = 0.3;   // 速度的中度平滑
+static const double kMovementThreshold = 0.5;         // 记录为移动的最小角度变化（度）
+static const double kGainRampTimeMs = 50.0;           // 增益斜坡时间常数（毫秒）
+static const double kRateRampTimeMs = 80.0;           // 速率斜坡时间常数（毫秒）
+static const double kMovementTimeoutMs = 50.0;        // 激进速度衰减前的时间（毫秒）
+static const double kVelocityDecayFactor = 0.5;       // 未检测到移动时的衰减率
+static const double kAdditionalDecayFactor = 0.8;     // 超时后的额外衰减
 
 @interface CreakAudioEngine ()
 
-// Audio engine components
+// 音频引擎组件
 @property (nonatomic, strong) AVAudioEngine *audioEngine;
 @property (nonatomic, strong) AVAudioPlayerNode *creakPlayerNode;
 @property (nonatomic, strong) AVAudioUnitVarispeed *varispeadUnit;
 @property (nonatomic, strong) AVAudioMixerNode *mixerNode;
 
-// Audio files
+// 音频文件
 @property (nonatomic, strong) AVAudioFile *creakLoopFile;
 
-// State tracking
+// 状态跟踪
 @property (nonatomic, assign) double lastLidAngle;
 @property (nonatomic, assign) double smoothedLidAngle;
 @property (nonatomic, assign) double lastUpdateTime;
@@ -89,23 +89,23 @@ static const double kAdditionalDecayFactor = 0.8;     // Additional decay after 
 - (BOOL)setupAudioEngine {
     self.audioEngine = [[AVAudioEngine alloc] init];
     
-    // Create audio nodes
+    // 创建音频节点
     self.creakPlayerNode = [[AVAudioPlayerNode alloc] init];
     self.varispeadUnit = [[AVAudioUnitVarispeed alloc] init];
     self.mixerNode = self.audioEngine.mainMixerNode;
     
-    // Attach nodes to engine
+    // 将节点附加到引擎
     [self.audioEngine attachNode:self.creakPlayerNode];
     [self.audioEngine attachNode:self.varispeadUnit];
     
-    // Audio connections will be made after loading the file to use its native format
+    // 加载文件后将建立音频连接以使用其原生格式
     return YES;
 }
 
 - (BOOL)loadAudioFiles {
     NSBundle *bundle = [NSBundle mainBundle];
     
-    // Load creak loop file
+    // 加载吱吱声循环文件
     NSString *creakPath = [bundle pathForResource:@"CREAK_LOOP" ofType:@"wav"];
     if (!creakPath) {
         NSLog(@"[CreakAudioEngine] Could not find CREAK_LOOP.wav");
@@ -120,10 +120,10 @@ static const double kAdditionalDecayFactor = 0.8;     // Additional decay after 
         return NO;
     }
     
-    // Connect the audio graph using the file's native format
+    // 使用文件的原生格式连接音频图
     AVAudioFormat *fileFormat = self.creakLoopFile.processingFormat;
     
-    // Connect audio graph: CreakPlayer -> Varispeed -> Mixer
+    // 连接音频图：吱吱声播放器 -> 变速 -> 混音器
     [self.audioEngine connect:self.creakPlayerNode to:self.varispeadUnit format:fileFormat];
     [self.audioEngine connect:self.varispeadUnit to:self.mixerNode format:fileFormat];
     return YES;
@@ -142,7 +142,7 @@ static const double kAdditionalDecayFactor = 0.8;     // Additional decay after 
         return;
     }
     
-    // Start looping the creak sound
+    // 开始循环播放吱吱声
     [self startCreakLoop];
 }
 
@@ -166,10 +166,10 @@ static const double kAdditionalDecayFactor = 0.8;     // Additional decay after 
         return;
     }
     
-    // Reset file position to beginning
+    // 重置文件位置到开头
     self.creakLoopFile.framePosition = 0;
     
-    // Schedule the creak loop to play continuously
+    // 安排吱吱声循环连续播放
     AVAudioFrameCount frameCount = (AVAudioFrameCount)self.creakLoopFile.length;
     AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:self.creakLoopFile.processingFormat
                                                              frameCapacity:frameCount];
@@ -183,7 +183,7 @@ static const double kAdditionalDecayFactor = 0.8;     // Additional decay after 
     [self.creakPlayerNode scheduleBuffer:buffer atTime:nil options:AVAudioPlayerNodeBufferLoops completionHandler:nil];
     [self.creakPlayerNode play];
     
-    // Set initial volume to 0 (will be controlled by gain)
+    // 将初始音量设置为 0（将由增益控制）
     self.creakPlayerNode.volume = 0.0;
 }
 
@@ -201,23 +201,23 @@ static const double kAdditionalDecayFactor = 0.8;     // Additional decay after 
         return;
     }
     
-    // Calculate time delta
+    // 计算时间增量
     double deltaTime = currentTime - self.lastUpdateTime;
     if (deltaTime <= 0 || deltaTime > 1.0) {
-        // Skip if time delta is invalid or too large (likely app was backgrounded)
+        // 如果时间增量无效或太大则跳过（可能应用已后台运行）
         self.lastUpdateTime = currentTime;
         return;
     }
     
-    // Stage 1: Smooth the raw angle input to eliminate sensor jitter
+    // 阶段 1：平滑原始角度输入以消除传感器抖动
     self.smoothedLidAngle = (kAngleSmoothingFactor * lidAngle) + 
                            ((1.0 - kAngleSmoothingFactor) * self.smoothedLidAngle);
     
-    // Stage 2: Calculate velocity from smoothed angle data
+    // 阶段 2：从平滑的角度数据计算速度
     double deltaAngle = self.smoothedLidAngle - self.lastLidAngle;
     double instantVelocity;
     
-    // Apply movement threshold to eliminate remaining noise
+    // 应用移动阈值以消除剩余噪声
     if (fabs(deltaAngle) < kMovementThreshold) {
         instantVelocity = 0.0;
     } else {
@@ -225,27 +225,27 @@ static const double kAdditionalDecayFactor = 0.8;     // Additional decay after 
         self.lastLidAngle = self.smoothedLidAngle;
     }
     
-    // Stage 3: Apply velocity smoothing and decay
+    // 阶段 3：应用速度平滑和衰减
     if (instantVelocity > 0.0) {
-        // Real movement detected - apply moderate smoothing
+        // 检测到真实移动 - 应用中度平滑
         self.smoothedVelocity = (kVelocitySmoothingFactor * instantVelocity) + 
                                ((1.0 - kVelocitySmoothingFactor) * self.smoothedVelocity);
         self.lastMovementTime = currentTime;
     } else {
-        // No movement detected - apply fast decay
+        // 未检测到移动 - 应用快速衰减
         self.smoothedVelocity *= kVelocityDecayFactor;
     }
     
-    // Additional decay if no movement for extended period
+    // 如果长时间没有移动则额外衰减
     double timeSinceMovement = currentTime - self.lastMovementTime;
     if (timeSinceMovement > (kMovementTimeoutMs / 1000.0)) {
         self.smoothedVelocity *= kAdditionalDecayFactor;
     }
     
-    // Update state for next iteration
+    // 更新状态以进行下一次迭代
     self.lastUpdateTime = currentTime;
     
-    // Apply velocity-based parameter mapping
+    // 应用基于速度的参数映射
     [self updateAudioParametersWithVelocity:self.smoothedVelocity];
 }
 
@@ -255,38 +255,38 @@ static const double kAdditionalDecayFactor = 0.8;     // Additional decay after 
 }
 
 - (void)updateAudioParametersWithVelocity:(double)velocity {
-    double speed = velocity; // Velocity is already absolute
+    double speed = velocity; // 速度已经是绝对值
     
-    // Calculate target gain: slow movement = loud creak, fast movement = quiet/silent
+    // 计算目标增益：慢速移动 = 大声吱吱声，快速移动 = 安静/静音
     double gain;
     if (speed < kDeadzone) {
-        gain = 0.0; // Below deadzone: no sound
+        gain = 0.0; // 低于死区：无声音
     } else {
-        // Use inverted smoothstep curve for natural volume response
+        // 使用反转的平滑步进曲线以获得自然的音量响应
         double e0 = fmax(0.0, kVelocityFull - 0.5);
         double e1 = kVelocityQuiet + 0.5;
         double t = fmin(1.0, fmax(0.0, (speed - e0) / (e1 - e0)));
-        double s = t * t * (3.0 - 2.0 * t); // smoothstep function
-        gain = 1.0 - s; // invert: slow = loud, fast = quiet
+        double s = t * t * (3.0 - 2.0 * t); // 平滑步进函数
+        gain = 1.0 - s; // 反转：慢速 = 响亮，快速 = 安静
         gain = fmax(0.0, fmin(1.0, gain));
     }
     
-    // Calculate target pitch/tempo rate based on movement speed
+    // 根据移动速度计算目标音高/速度率
     double normalizedVelocity = fmax(0.0, fmin(1.0, speed / kVelocityQuiet));
     double rate = kMinRate + normalizedVelocity * (kMaxRate - kMinRate);
     rate = fmax(kMinRate, fmin(kMaxRate, rate));
     
-    // Store targets for smooth ramping
+    // 存储目标以实现平滑斜坡
     self.targetGain = gain;
     self.targetRate = rate;
     
-    // Apply smooth parameter transitions
+    // 应用平滑的参数过渡
     [self rampToTargetParameters];
 }
 
-// Helper function for parameter ramping
+// 参数斜坡的辅助函数
 - (double)rampValue:(double)current toward:(double)target withDeltaTime:(double)dt timeConstantMs:(double)tauMs {
-    double alpha = fmin(1.0, dt / (tauMs / 1000.0)); // linear ramp coefficient
+    double alpha = fmin(1.0, dt / (tauMs / 1000.0)); // 线性斜坡系数
     return current + (target - current) * alpha;
 }
 
@@ -295,18 +295,18 @@ static const double kAdditionalDecayFactor = 0.8;     // Additional decay after 
         return;
     }
     
-    // Calculate delta time for ramping
+    // 计算斜坡的增量时间
     static double lastRampTime = 0;
     double currentTime = CACurrentMediaTime();
     if (lastRampTime == 0) lastRampTime = currentTime;
     double deltaTime = currentTime - lastRampTime;
     lastRampTime = currentTime;
     
-    // Ramp current values toward targets for smooth transitions
+    // 将当前值向目标斜坡过渡以实现平滑转换
     self.currentGain = [self rampValue:self.currentGain toward:self.targetGain withDeltaTime:deltaTime timeConstantMs:kGainRampTimeMs];
     self.currentRate = [self rampValue:self.currentRate toward:self.targetRate withDeltaTime:deltaTime timeConstantMs:kRateRampTimeMs];
     
-    // Apply ramped values to audio nodes (2x multiplier for audible volume)
+    // 将斜坡值应用于音频节点（2倍乘数以获得可听音量）
     self.creakPlayerNode.volume = (float)(self.currentGain * 2.0);
     self.varispeadUnit.rate = (float)self.currentRate;
 }

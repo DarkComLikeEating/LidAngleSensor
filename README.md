@@ -1,74 +1,52 @@
-# Lid Angle Sensor
+# MacBook 屏幕倾角检测器
 
-Hi, I’m Sam Gold. Did you know that you have ~rights~ a lid angle sensor in your MacBook? [The ~Constitution~ human interface device utility says you do.](https://youtu.be/wqnHtGgVAUE?t=21)
+这是一个实用工具程序，用于显示 MacBook 内置屏幕倾角传感器的角度值。程序还提供了两种可选的音频反馈模式：
+- **门吱吱声模式**：当你缓慢调整屏幕角度时，会播放木门吱吱作响的声音
+- **特雷门琴模式**：屏幕角度控制音高，移动速度控制音量，带来音乐般的体验
 
-This is a little utility that shows the angle from the sensor and, optionally, plays a wooden door creaking sound if you adjust it reeaaaaaal slowly.
+## 常见问题
 
-## FAQ
+**什么是屏幕倾角传感器？**
 
-**What is a lid angle sensor?**
+这是一个可以检测 MacBook 屏幕盖与底座之间角度的传感器。
 
-Despite what the name would have you believe, it is a sensor that detects the angle of the lid.
+**哪些设备有屏幕倾角传感器？**
 
-**Which devices have a lid angle sensor?**
+该传感器最早出现在 2019 年的 16 英寸 MacBook Pro 上。如果你的笔记本电脑更新，大概率会有这个传感器。[根据反馈](https://github.com/samhenrigold/LidAngleSensor/issues/13)，**M1 设备可能无法正常工作**。
 
-It was introduced with the 2019 16-inch MacBook Pro. If your laptop is newer, you probably have it. [People have reported](https://github.com/samhenrigold/LidAngleSensor/issues/13) that it **does not work on M1 devices**, I have not yet figured out a fix.
+**我的笔记本应该有这个传感器，为什么检测不到？**
 
-**My laptop should have it, why doesn't it show up?**
+如果你的设备应该支持但无法检测到，可以尝试运行[这个脚本](https://gist.github.com/samhenrigold/42b5a92d1ee8aaf2b840be34bff28591)来诊断问题，并在 [issue](https://github.com/samhenrigold/LidAngleSensor/issues/new/choose) 中反馈结果。
 
-I've only tested this on my M4 MacBook Pro and have hard-coded it to look for a specific sensor. If that doesn't work, try running [this script](https://gist.github.com/samhenrigold/42b5a92d1ee8aaf2b840be34bff28591) and report the output in [an issue](https://github.com/samhenrigold/LidAngleSensor/issues/new/choose).
-
-Known problematic models:
+已知存在问题的型号：
 
 - M1 MacBook Air
 - M1 MacBook Pro
 
-**Can I use this on my iMac?**
+**可以在 iMac 上使用吗？**
 
-~~Not yet tested. Feel free to slam your computer into your desk and make a PR with your results.~~
+根据[测试反馈](https://github.com/samhenrigold/LidAngleSensor/issues/33)，iMac 也可以正常工作。
 
-[It totally works](https://github.com/samhenrigold/LidAngleSensor/issues/33). If it doesn't work for you, try slamming your computer harder?
+**为什么笔记本电脑需要知道屏幕的精确角度？**
 
-**Why?**
+这个问题暂无确切答案。
 
-A lot of free time. I'm open to full-time work in NYC or remote. I'm a designer/design-engineer. https://samhenri.gold
+**可以关闭声音吗？**
 
-**No I mean like why does my laptop need to know the exact angle of its lid?**
+可以，不点击"Start Audio"按钮即可。
 
-Oh. I don't know.
+## 编译
 
-**Can I contribute?**
+根据[此 issue](https://github.com/samhenrigold/LidAngleSensor/issues/12)，编译此项目需要安装 Xcode。建议使用 Xcode 16 或更高版本。
 
-I guess.
+## 安装
 
-**Why does it say it's by Lisa?**
-
-I signed up for my developer account when I was a kid, used my mom's name, and now it's stuck that way forever and I can't change it. That's life.
-
-**How come the audio feels kind of...weird?**
-
-I'm bad at audio.
-
-**Where did the sound effect come from?**
-
-LEGO Batman 3: Beyond Gotham. But you knew that already.
-
-**Can I turn off the sound?**
-
-Yes, never click "Start Audio". But this energy isn't encouraged.
-
-## Building
-
-According to [this issue](https://github.com/samhenrigold/LidAngleSensor/issues/12), building requires having Xcode installed. I've only tested this on Xcode 26. YMMV.
-
-## Installation
-
-Via Homebrew:
+通过 Homebrew 安装：
 
 ```shell
 brew install lidanglesensor
 ```
 
-## Related projects
+## 相关项目
 
-- [Python library that taps into this sensor](https://github.com/tcsenpai/pybooklid)
+- [Python 库：pybooklid](https://github.com/tcsenpai/pybooklid)

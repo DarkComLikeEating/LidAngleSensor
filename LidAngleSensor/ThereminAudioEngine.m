@@ -8,31 +8,31 @@
 #import "ThereminAudioEngine.h"
 #import <AudioToolbox/AudioToolbox.h>
 
-// Theremin parameter mapping constants
-static const double kMinFrequency = 110.0;       // Hz - A2 note (closed lid)
-static const double kMaxFrequency = 440.0;       // Hz - A4 note (open lid) - much lower range
-static const double kMinAngle = 0.0;             // degrees - closed lid
-static const double kMaxAngle = 135.0;           // degrees - fully open lid
+// 特雷门琴参数映射常量
+static const double kMinFrequency = 110.0;       // Hz - A2 音符（屏幕关闭）
+static const double kMaxFrequency = 880.0;       // Hz - A5 音符（屏幕完全打开）
+static const double kMinAngle = 0.0;             // 度 - 屏幕关闭
+static const double kMaxAngle = 135.0;           // 度 - 屏幕完全打开
 
-// Volume control constants - continuous tone with velocity modulation
-static const double kBaseVolume = 0.6;           // Base volume when at rest
-static const double kVelocityVolumeBoost = 0.4;  // Additional volume boost from movement
-static const double kVelocityFull = 8.0;         // deg/s - max volume boost at/under this velocity
-static const double kVelocityQuiet = 80.0;       // deg/s - no volume boost over this velocity
+// 音量控制常量 - 具有速度调制的连续音调
+static const double kBaseVolume = 0.6;           // 静止时的基础音量
+static const double kVelocityVolumeBoost = 0.4;  // 来自移动的额外音量提升
+static const double kVelocityFull = 8.0;         // 度/秒 - 在此速度或以下时最大音量提升
+static const double kVelocityQuiet = 80.0;       // 度/秒 - 超过此速度时无音量提升
 
-// Vibrato constants
-static const double kVibratoFrequency = 5.0;     // Hz - vibrato rate
-static const double kVibratoDepth = 0.03;        // Vibrato depth as fraction of frequency (3%)
+// 颤音常量
+static const double kVibratoFrequency = 5.0;     // Hz - 颤音速率
+static const double kVibratoDepth = 0.03;        // 颤音深度作为频率的分数（3%）
 
-// Smoothing constants
-static const double kAngleSmoothingFactor = 0.1;      // Moderate smoothing for frequency
-static const double kVelocitySmoothingFactor = 0.3;   // Moderate smoothing for velocity
-static const double kFrequencyRampTimeMs = 30.0;      // Frequency ramping time constant
-static const double kVolumeRampTimeMs = 50.0;         // Volume ramping time constant
-static const double kMovementThreshold = 0.3;         // Minimum angle change to register movement
-static const double kMovementTimeoutMs = 100.0;       // Time before velocity decay
-static const double kVelocityDecayFactor = 0.7;       // Decay rate when no movement
-static const double kAdditionalDecayFactor = 0.85;    // Additional decay after timeout
+// 平滑常量
+static const double kAngleSmoothingFactor = 0.1;      // 频率的中度平滑
+static const double kVelocitySmoothingFactor = 0.3;   // 速度的中度平滑
+static const double kFrequencyRampTimeMs = 30.0;      // 频率斜坡时间常数
+static const double kVolumeRampTimeMs = 50.0;         // 音量斜坡时间常数
+static const double kMovementThreshold = 0.3;         // 记录移动的最小角度变化
+static const double kMovementTimeoutMs = 100.0;       // 速度衰减前的时间
+static const double kVelocityDecayFactor = 0.7;       // 无移动时的衰减率
+static const double kAdditionalDecayFactor = 0.85;    // 超时后的额外衰减
 
 // Audio constants
 static const double kSampleRate = 44100.0;
@@ -57,11 +57,11 @@ static const UInt32 kBufferSize = 512;
 @property (nonatomic, assign) BOOL isFirstUpdate;
 @property (nonatomic, assign) NSTimeInterval lastMovementTime;
 
-// Sine wave generation
+// 正弦波生成
 @property (nonatomic, assign) double phase;
 @property (nonatomic, assign) double phaseIncrement;
 
-// Vibrato generation
+// 颤音生成
 @property (nonatomic, assign) double vibratoPhase;
 
 @end
@@ -103,19 +103,19 @@ static const UInt32 kBufferSize = 512;
     self.audioEngine = [[AVAudioEngine alloc] init];
     self.mixerNode = self.audioEngine.mainMixerNode;
     
-    // Create audio format for our sine wave
+    // 为我们的正弦波创建音频格式
     AVAudioFormat *format = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                              sampleRate:kSampleRate
                                                                channels:1
                                                             interleaved:NO];
     
-    // Create source node for sine wave generation
+    // 创建正弦波生成的源节点
     __weak typeof(self) weakSelf = self;
     self.sourceNode = [[AVAudioSourceNode alloc] initWithFormat:format renderBlock:^OSStatus(BOOL * _Nonnull isSilence, const AudioTimeStamp * _Nonnull timestamp, AVAudioFrameCount frameCount, AudioBufferList * _Nonnull outputData) {
         return [weakSelf renderSineWave:isSilence timestamp:timestamp frameCount:frameCount outputData:outputData];
     }];
     
-    // Attach and connect the source node
+    // 附加并连接源节点
     [self.audioEngine attachNode:self.sourceNode];
     [self.audioEngine connect:self.sourceNode to:self.mixerNode format:format];
     
@@ -160,29 +160,29 @@ static const UInt32 kBufferSize = 512;
     
     float *output = (float *)outputData->mBuffers[0].mData;
     
-    // Always generate sound (continuous tone)
+    // 始终生成声音（连续音调）
     *isSilence = NO;
     
-    // Calculate vibrato phase increment
+    // 计算颤音相位增量
     double vibratoPhaseIncrement = 2.0 * M_PI * kVibratoFrequency / kSampleRate;
     
-    // Generate sine wave samples with vibrato
+    // 生成带颤音的正弦波样本
     for (AVAudioFrameCount i = 0; i < frameCount; i++) {
-        // Calculate vibrato modulation
+        // 计算颤音调制
         double vibratoModulation = sin(self.vibratoPhase) * kVibratoDepth;
         double modulatedFrequency = self.currentFrequency * (1.0 + vibratoModulation);
         
-        // Update phase increment for modulated frequency
+        // 更新调制频率的相位增量
         self.phaseIncrement = 2.0 * M_PI * modulatedFrequency / kSampleRate;
         
-        // Generate sample with vibrato and current volume
-        output[i] = (float)(sin(self.phase) * self.currentVolume * 0.25); // 0.25 to prevent clipping
+        // 生成带颤音和当前音量的样本
+        output[i] = (float)(sin(self.phase) * self.currentVolume * 0.25); // 0.25 以防止削波
         
-        // Update phases
+        // 更新相位
         self.phase += self.phaseIncrement;
         self.vibratoPhase += vibratoPhaseIncrement;
         
-        // Wrap phases to prevent accumulation of floating point errors
+        // 包装相位以防止浮点误差累积
         if (self.phase >= 2.0 * M_PI) {
             self.phase -= 2.0 * M_PI;
         }
@@ -206,7 +206,7 @@ static const UInt32 kBufferSize = 512;
         self.lastMovementTime = currentTime;
         self.isFirstUpdate = NO;
         
-        // Set initial frequency based on angle
+        // 根据角度设置初始频率
         [self updateTargetParametersWithAngle:lidAngle velocity:0.0];
         return;
     }
@@ -214,20 +214,20 @@ static const UInt32 kBufferSize = 512;
     // Calculate time delta
     double deltaTime = currentTime - self.lastUpdateTime;
     if (deltaTime <= 0 || deltaTime > 1.0) {
-        // Skip if time delta is invalid or too large
+        // 如果时间增量无效或太大则跳过
         self.lastUpdateTime = currentTime;
         return;
     }
     
-    // Stage 1: Smooth the raw angle input
+    // 阶段 1：平滑原始角度输入
     self.smoothedLidAngle = (kAngleSmoothingFactor * lidAngle) + 
                            ((1.0 - kAngleSmoothingFactor) * self.smoothedLidAngle);
     
-    // Stage 2: Calculate velocity from smoothed angle data
+    // 阶段 2：从平滑的角度数据计算速度
     double deltaAngle = self.smoothedLidAngle - self.lastLidAngle;
     double instantVelocity;
     
-    // Apply movement threshold
+    // 应用移动阈值
     if (fabs(deltaAngle) < kMovementThreshold) {
         instantVelocity = 0.0;
     } else {
@@ -253,7 +253,7 @@ static const UInt32 kBufferSize = 512;
     // Update state for next iteration
     self.lastUpdateTime = currentTime;
     
-    // Update target parameters
+    // 更新目标参数
     [self updateTargetParametersWithAngle:self.smoothedLidAngle velocity:self.smoothedVelocity];
     
     // Apply smooth parameter transitions
@@ -267,25 +267,25 @@ static const UInt32 kBufferSize = 512;
 }
 
 - (void)updateTargetParametersWithAngle:(double)angle velocity:(double)velocity {
-    // Map angle to frequency using exponential curve for musical feel
+    // 使用指数曲线将角度映射到频率以获得音乐感
     double normalizedAngle = fmax(0.0, fmin(1.0, (angle - kMinAngle) / (kMaxAngle - kMinAngle)));
     
-    // Use exponential mapping for more musical frequency distribution
-    double frequencyRatio = pow(normalizedAngle, 0.7); // Slight compression for better control
+    // 使用指数映射以获得更音乐化的频率分布
+    double frequencyRatio = pow(normalizedAngle, 0.7); // 轻微压缩以获得更好的控制
     self.targetFrequency = kMinFrequency + frequencyRatio * (kMaxFrequency - kMinFrequency);
     
-    // Calculate continuous volume with velocity-based boost
+    // 计算具有基于速度提升的连续音量
     double velocityBoost = 0.0;
     if (velocity > 0.0) {
-        // Use smoothstep curve for natural volume boost response
+        // 使用平滑步进曲线以获得自然的音量提升响应
         double e0 = 0.0;
         double e1 = kVelocityQuiet;
         double t = fmin(1.0, fmax(0.0, (velocity - e0) / (e1 - e0)));
-        double s = t * t * (3.0 - 2.0 * t); // smoothstep function
-        velocityBoost = (1.0 - s) * kVelocityVolumeBoost; // invert: slow = more boost, fast = less boost
+        double s = t * t * (3.0 - 2.0 * t); // 平滑步进函数
+        velocityBoost = (1.0 - s) * kVelocityVolumeBoost; // 反转：慢速 = 更多提升，快速 = 更少提升
     }
     
-    // Combine base volume with velocity boost
+    // 将基础音量与速度提升相结合
     self.targetVolume = kBaseVolume + velocityBoost;
     self.targetVolume = fmax(0.0, fmin(1.0, self.targetVolume));
 }
