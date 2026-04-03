@@ -21,7 +21,7 @@ static const double kVelocityFull = 8.0;         // 度/秒 - 在此速度或以
 static const double kVelocityQuiet = 80.0;       // 度/秒 - 超过此速度时无音量提升
 
 // 颤音常量
-static const double kVibratoFrequency = 5.0;     // Hz - 颤音速率
+static const double kVibratoFrequency = 7.0;     // Hz - 颤音速率
 static const double kVibratoDepth = 0.03;        // 颤音深度作为频率的分数（3%）
 
 // 平滑常量
